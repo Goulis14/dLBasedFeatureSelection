@@ -10,6 +10,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, r
 import tensorflow as tf
 from keras.layers import Input, Dense
 from keras.models import Model
+from sklearn.ensemble import RandomForestClassifier
 
 
 # Define the column names
@@ -68,10 +69,6 @@ else:
     print("No categorical columns found.")
 
 # Split the data into training and testing sets
-
-
-
-
 # Specify the target column
 target_column = 'class'
 
@@ -90,7 +87,6 @@ print("X_test shape:", X_test.shape)
 print("y_test shape:", y_test.shape)
 
 # Scale numerical features
-
 # Initialize the scaler
 scaler = MinMaxScaler()
 print("Data before scaling:\n", X_train.head())
@@ -98,7 +94,6 @@ print("Data before scaling:\n", X_train.head())
 # Specify the columns to be scaled
 columns_to_scale = ['clump_thickness', 'uniformity_of_cell_size', 'uniformity_of_cell_shape', 'marginal_adhesion',
                     'single_epithelial_cell_size', 'bare_nuclei', 'bland_chromatin', 'normal_nucleoli', 'mitoses']
-
 # Scale the columns in the training set
 X_train[columns_to_scale] = scaler.fit_transform(X_train[columns_to_scale])
 
@@ -111,7 +106,6 @@ print("Data after scaling:\n", X_train[:10])
 # Implement traditional feature selection methods
 # filter methods
 # Chi-squared feature selection
-
 # Select the top 5 features using chi-squared test
 selector = SelectKBest(score_func=chi2, k=5)
 X_new = selector.fit_transform(X_train, y_train)
@@ -137,7 +131,6 @@ print("Optimal number of features:", selector.n_features_)
 print("Selected features:", X_train.columns[selector.support_])
 
 # Embedded method
-
 # Create a Lasso classifier
 clf = Lasso(alpha=0.1)
 # Fit the Lasso classifier to the data
@@ -173,3 +166,22 @@ print("Confusion matrix:\n", conf_matrix)
 
 report = classification_report(y_test, y_pred, digits = 10)
 print(report)
+
+#randomForestClassifier
+rf_model = RandomForestClassifier()
+
+
+rf_model.fit(X_train[selected_features], y_train)
+
+
+y_pred_rf = rf_model.predict(X_test[selected_features])
+accuracy_rf = accuracy_score(y_test, y_pred_rf)
+precision_rf = precision_score(y_test, y_pred_rf, pos_label=2)
+recall_rf = recall_score(y_test, y_pred_rf, pos_label=2)
+f1_rf = f1_score(y_test, y_pred_rf, pos_label=2)
+conf_matrix_rf = confusion_matrix(y_test, y_pred_rf)
+print("Random Forest Classifier - Accuracy:", accuracy_rf)
+print("Random Forest Classifier - Precision:", precision_rf)
+print("Random Forest Classifier - Recall:", recall_rf)
+print("Random Forest Classifier - F1 score:", f1_rf)
+print("Random Forest Classifier - Confusion matrix:\n", conf_matrix_rf)

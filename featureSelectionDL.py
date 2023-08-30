@@ -2,13 +2,16 @@ import pandas as pd             # for data manipulation and analysis
 import numpy as np              # for numerical operations
 from sklearn.model_selection import train_test_split   # for splitting data into training and testing sets
 from sklearn.preprocessing import MinMaxScaler        # for feature scaling
-from keras.layers import Input, Dense, LeakyReLU       # for creating neural network layers
+# for creating neural network layers
+from keras.layers import Input, Dense, LeakyReLU,Conv2D,Flatten
 from keras.models import Model                         # for creating and training neural network models
 from sklearn.linear_model import LogisticRegression   # for creating and training logistic regression models
-from sklearn.metrics import (precision_score, recall_score, f1_score, 
+from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score,
                             confusion_matrix, classification_report, roc_curve, roc_auc_score)  # for model evaluation
 from io import StringIO         # for creating in-memory file objects
-
+from sklearn.ensemble import RandomForestClassifier
+import tensorflow as tf
+from keras.utils import plot_model
 
 # Define column names
 column_names = ["id", "clump_thickness", "uniformity_of_cell_size",   "uniformity_of_cell_shape",
@@ -110,7 +113,7 @@ print("Data after scaling:\n", X_train[:10])
 # define the shape of the input data
 input_shape = (X_train.shape[1],)
 
-    # define the architecture of the autoencoder
+# define the architecture of the autoencoder
 input_layer = Input(shape=input_shape)
 encoded = Dense(64, activation='relu')(input_layer)
 encoded = Dense(32, activation='relu')(encoded)
@@ -125,8 +128,9 @@ autoencoder = Model(input_layer, decoded)
 # compile the autoencoder
 autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
 
-# train the autoencoder
+# train the autoencoder    
 autoencoder.fit(X_train, X_train, epochs=50, batch_size=32, validation_split=0.2)
+
 
 # use the encoder to transform the input data into a lower-dimensional representation
 encoder = Model(input_layer, encoded)
@@ -143,9 +147,70 @@ y_pred = lr.predict(X_test_encoded)
 report = classification_report(y_test, y_pred)
 print(report)
 
-# convert the report to a DataFrame
-df = pd.read_csv(StringIO(report), skiprows=1, sep=' {2,}', engine='python')
-df.columns = ['class', 'precision', 'recall', 'f1-score', 'support']
+# Print a summary of the model
+autoencoder.summary()
 
-# save the DataFrame to an Excel file
-df.to_excel('C:/Users/tgoul/OneDrive/Υπολογιστής/Thesis/ThesisFiles/python/FSdLResults.xlsx')
+# Plot the model
+plot_model(autoencoder, to_file='model.png',show_shapes=True, show_layer_names=True)
+# # Generate the visualization as an image file
+# plot_model(autoencoder, to_file='neural_network.png', show_shapes=True, show_layer_names=True)
+
+# # Feature selection using CNN
+
+# # Reshape the input data for CNN
+# X_train_cnn = X_train.values.reshape(-1, 3, 3, 1)
+# X_test_cnn = X_test.values.reshape(-1, 3, 3, 1)
+
+# # Define the shape of the input data
+# input_shape = X_train_cnn[0].shape
+
+# # Define the architecture of the CNN
+# input_layer = Input(shape=input_shape)
+# conv1 = Conv2D(32, kernel_size=(3, 3), activation='relu')(input_layer)
+# conv2 = Conv2D(64, kernel_size=(3, 3), activation='relu')(conv1)
+# flatten = Flatten()(conv2)
+# dense1 = Dense(64, activation='relu')(flatten)
+# dense2 = Dense(64, activation='relu')(dense1)
+# output_layer = Dense(10, activation='softmax')(dense2)
+# encoded = Dense(16, activation='relu')(flatten)
+
+
+# # Build the CNN model
+# cnn_model = Model(input_layer, encoded)
+
+# # Compile the CNN model
+# cnn_model.compile(optimizer='adam', loss='binary_crossentropy')
+
+# # Train the CNN model
+# cnn_model.fit(X_train_cnn, X_train_cnn, epochs=50,
+#             batch_size=32, validation_split=0.2)
+
+# # Use the CNN model to extract features from the input data
+# X_train_encoded = cnn_model.predict(X_train_cnn)
+# X_test_encoded = cnn_model.predict(X_test_cnn)
+
+# # Train the logistic regression model on the encoded data
+# lr = LogisticRegression()
+# lr.fit(X_train_encoded, y_train)
+
+# # Evaluate the model on the test set
+# y_pred = lr.predict(X_test_encoded)
+# report = classification_report(y_test, y_pred)
+# print(report)
+
+# # Convert the report to a DataFrame
+# df = pd.read_csv(StringIO(report), skiprows=1, sep=' {2,}', engine='python')
+# df.columns = ['class', 'precision', 'recall', 'f1-score', 'support']
+
+# # Save the DataFrame to an Excel file
+# df.to_excel(
+#     'C:/Users/tgoul/OneDrive/Υπολογιστής/Thesis/ThesisFiles/python/FSdLResults.xlsx')
+
+# # convert the report to a DataFrame
+# df = pd.read_csv(StringIO(report), skiprows=1, sep=' {2,}', engine='python')
+# df.columns = ['class', 'precision', 'recall', 'f1-score', 'support']
+
+
+
+# # save the DataFrame to an Excel file
+# df.to_excel('C:/Users/tgoul/OneDrive/Υπολογιστής/Thesis/ThesisFiles/python/FSdLResults.xlsx')
